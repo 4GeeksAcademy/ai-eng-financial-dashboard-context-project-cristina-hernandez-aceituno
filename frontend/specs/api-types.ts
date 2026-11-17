@@ -2,7 +2,7 @@ import type {
   BusinessType,
   Category,
   OperationType,
-} from '../src/lib/financial-types'
+} from '../../src/lib/financial-types'
 
 export interface FacetsResponse {
   /** Tipos de operación disponibles: 'income' o 'outcome'; propiedad requerida y no nullable. */

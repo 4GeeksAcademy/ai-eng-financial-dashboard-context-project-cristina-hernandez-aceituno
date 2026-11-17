@@ -1,7 +1,7 @@
 import type {
   BusinessType,
   OperationType,
-} from '../src/lib/financial-types'
+} from '../../src/lib/financial-types'
 
 /** Parámetros opcionales para acotar un rango de fechas. */
 export interface DateRangeFilter {

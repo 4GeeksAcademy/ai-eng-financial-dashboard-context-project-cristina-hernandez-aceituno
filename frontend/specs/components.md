@@ -225,16 +225,21 @@ interface KPICardProps {
 
 #### Variantes de Color (CSS Variables)
 
+**Definidas en** [index.css](../src/index.css):
 ```css
 :root {
-  --income-badge: #dcfce7;      /* Verde claro */
-  --income-badge-fg: #166534;   /* Verde oscuro */
+  --income-badge: #dcfce7;         /* Verde claro */
+  --income-badge-fg: #166534;      /* Verde oscuro */
   
-  --outcome-badge: #fee2e2;     /* Rojo claro */
-  --outcome-badge-fg: #991b1b;  /* Rojo oscuro */
+  --outcome-badge: #fee2e2;        /* Rojo claro */
+  --outcome-badge-fg: #991b1b;     /* Rojo oscuro */
   
-  --profit-badge: #dbeafe;      /* Azul claro */
-  --profit-badge-fg: #1e40af;   /* Azul oscuro */
+  --profit-badge: #dbeafe;         /* Azul claro */
+  --profit-badge-fg: #1e40af;      /* Azul oscuro */
+  
+  --chart-profit: #3b82f6;         /* Azul para gráficos */
+  --chart-income: #22c55e;         /* Verde para gráficos */
+  --chart-outcome: #ef4444;        /* Rojo para gráficos */
 }
 ```
 
@@ -307,12 +312,12 @@ interface KPIRowProps {
 
 2. Cada columna renderiza un `KPICard` con:
    - `variant`: 'income', 'outcome', 'profit', 'profitPercent'
-   - `value`: Formateado según tipo (ver `formatCurrency()` y `formatPercent()`)
+   - `value`: Formateado según tipo (ver [financial-utils.ts](../src/lib/financial-utils.ts))
    - `helperText`: Descripción fija en inglés
    - `icon`: Hardcodeado (TrendingUp, TrendingDown, DollarSign, BarChart2)
    - `loading`: Heredado de prop
 
-**Formato de Valores**:
+**Formato de Valores** (via [financial-utils.ts](../src/lib/financial-utils.ts)):
 - Income/Outcome/Profit: `$1,234.56` (via `formatCurrency(number)`)
 - Profit %: `45.3%` (via `formatPercent(number)`)
 - Si null: `—` (guión)
@@ -569,18 +574,19 @@ function Skeleton({ className, ...props }: React.ComponentProps<'div'>): JSX.Ele
 
 ## Ambigüedades Resueltas
 
-| Ambigüedad | Resolución |
-|-----------|-----------|
-| ¿Período hardcodeado o dinámico? | MVP: prop `period` (string). Fase 2: selector interactivo con `onPeriodChange()`. |
-| ¿Valores formateados o sin format? | Caller debe pasar `value` ya formateado (string). KPIRow usa `formatCurrency()` y `formatPercent()`. |
-| ¿Qué ocurre si metrics es null? | Si `loading=false`, mostrar "—". Si `loading=true`, mostrar skeletons. |
-| ¿Error state en componentes? | MVP: no existe. Fase 2: agregar prop `error?: boolean` y renderizar en rojo. |
-| ¿Responsividad breakpoints? | Mobile (<640px): 1 col. Tablet (640-1200px): 2 cols. Desktop (≥1200px): 4 cols. |
-| ¿Tooltip en gráficos? | Personalizado, con formatCurrency() para moneda y .toFixed(1) para porcentajes. |
-| ¿Datos vacíos en charts? | Mostrar "No data available to display" (centrado, 280px). |
-| ¿Variables CSS para colores? | Sí, usar `var(--income-badge)`, etc. Definidas en root. |
-| ¿States de loading/error? | Loading: prop `loading?: boolean`. Error: Fase 2 (nuevo prop `error?: boolean`). |
-| ¿Props adicionales en Fase 2? | Comparativas, filtros, eventos onClick, descarga de datos. |
+| Pregunta | Resolución | Referencia |
+|----------|----------|-----------|
+| ¿Período hardcodeado o dinámico? | MVP: prop `period` (string estático). Fase 2: selector interactivo con `onPeriodChange()`. | [DashboardHeader](#1-dashboardheader) |
+| ¿Valores formateados o sin formato? | **Caller pasa strings pre-formateados**. KPIRow usa `formatCurrency()` y `formatPercent()` antes de pasar a KPICard. | [KPICard](#2-kpicard), [KPIRow](#3-kpirow) |
+| ¿Qué ocurre si metrics es null? | Si `loading=false` → "—". Si `loading=true` → skeletons. Nunca error en MVP. | [KPIRow](#3-kpirow) |
+| ¿Error state en componentes? | MVP: **no existe** (sin prop error). Fase 2: agregar prop `error?: boolean` para estado rojo. | [KPICard](#2-kpicard) |
+| ¿Responsividad breakpoints? | Mobile (<640px): 1 col. Tablet (640-1200px): 2 cols. Desktop (≥1200px): 4 cols. (Tailwind sm/xl) | [KPIRow](#3-kpirow) |
+| ¿Tooltip en gráficos? | Personalizado. Moneda: `formatCurrency()`. Porcentajes: `.toFixed(1)`. Ambos desde [financial-utils.ts](../src/lib/financial-utils.ts). | [IncomeOutcomeChart](#4-incomeoutcomechart) |
+| ¿Datos vacíos en charts? | Mostrar **"No data available to display"** (centrado, 280px alto). | [IncomeOutcomeChart](#4-incomeoutcomechart) |
+| ¿Variables CSS para colores? | Definidas en [index.css](../src/index.css): `--income-badge`, `--outcome-badge`, `--profit-badge`, etc. | [KPICard](#2-kpicard) |
+| ¿Dónde viven los tipos base? | [frontend/src/lib/financial-types.ts](../src/lib/financial-types.ts): OperationType, Category, BusinessType, FinancialMovement, KPIMetrics, MonthlyDataPoint | Arriba en "Tipos Base" |
+| ¿Dónde están las utilidades de formato? | [frontend/src/lib/financial-utils.ts](../src/lib/financial-utils.ts): `formatCurrency()`, `formatPercent()`, cálculos de KPI | [KPICard](#2-kpicard), [KPIRow](#3-kpirow) |
+| ¿Props adicionales en Fase 2? | Comparativas (`comparison` prop), filtros (badges), eventos (`onClick`), descarga de datos. | [Cambios Esperados en Fase 2](#cambios-esperados-en-fase-2) |
 
 ---
 
@@ -595,24 +601,31 @@ function Skeleton({ className, ...props }: React.ComponentProps<'div'>): JSX.Ele
 - ✅ Componentes base (Card, Skeleton)
 
 ### Fase 2: Escala & Features
-- [ ] Nuevos componentes:
-  - `AlertsTable` (lista de anomalías, params desde AlertsParams)
-  - `CategoriesChart` (pie/donut, datos desde TopCategoriesResponse)
-  - `FilterBar` (selector de rango, negocio, categoría, operation_type)
-  - `PaginationControl` (prev/next, limit/offset)
-  - `DataExport` (botón CSV/JSON)
+**Duración**: 6-8 semanas (semanas 9-16)
 
-- [ ] Mejoras a existentes:
-  - DashboardHeader: Selector de período interactivo
-  - KPICard: Comparativa, trend arrows, error state
-  - KPIRow: Filtros aplicados (badges), drill-down onClick
-  - Charts: Filtro por categoría, groupBy dinámico
+**Nuevos Componentes**:
+- `AlertsTable` - Tabla de anomalías de gastos (params: AlertsParams, response: AlertsResponse)
+- `CategoriesChart` - Pie/donut de top categorías (params: TopCategoriesParams, response: TopCategoriesResponse)
+- `ComparisonChart` - Gráfico grouped bars B2B vs B2C (dos llamadas a /api/metrics/summary)
+- `FilterBar` - Selector de rango de fechas, negocio, categoría, operation_type
+- `PaginationControl` - Prev/next, limit/offset (para listas sin paginar)
+- `DataExport` - Botón CSV/JSON con descarga
+
+**Mejoras a Componentes MVP**:
+- `DashboardHeader`: Cambiar period (string hardcodeado) → DateRangePicker interactivo, evento `onPeriodChange(start, end)`
+- `KPICard`: Agregar prop `comparison?: { value: number; trend: 'up'|'down' }` para mostrar variación vs período anterior
+- `KPICard`: Agregar prop `error?: boolean` para estado rojo (ej: "Failed to load")
+- `KPIRow`: Renderizar badges con filtros aplicados (ej: "Income (B2B only)", "Outcome (Suppliers)")
+- `KPIRow`: Eventos `onClick()` en cada tarjeta para navegar a detalles/movimientos
+- `IncomeOutcomeChart`: Agregar prop `businessType?: BusinessType` para datos segmentados
+- `ProfitPercentChart`: Línea de referencia benchmark configurable (ej: 30% target)
 
 ### Fase 3: Producción & Polish
-- [ ] Performance: Code splitting, lazy load charts
-- [ ] Accesibilidad: ARIA labels, keyboard navigation
-- [ ] Temas: Dark mode (ya existe), light mode
-- [ ] I18n: Traducción a múltiples idiomas
+**Duración**: 6-8 semanas (semanas 17-24)
+- Performance: Code splitting, lazy load charts
+- Accesibilidad: ARIA labels, keyboard navigation
+- Temas: Dark mode (ya existe), light mode
+- I18n: Traducción a múltiples idiomas
 
 ---
 
@@ -628,17 +641,28 @@ function Skeleton({ className, ...props }: React.ComponentProps<'div'>): JSX.Ele
 
 ## Checklist de Implementación
 
-### Completados ✅
-- [x] DashboardHeader renderiza correctamente
-- [x] KPICard con 4 variantes y state loading
-- [x] KPIRow con grid responsivo
-- [x] IncomeOutcomeChart con 2 series y tooltip
-- [x] ProfitPercentChart con 1 serie
-- [x] Componentes base (Card, Skeleton)
+### MVP (Completados) ✅
+- [x] DashboardHeader renderiza correctamente (período hardcodeado)
+- [x] KPICard con 4 variantes (income, outcome, profit, profitPercent) y state loading
+- [x] KPIRow con grid responsivo (1/2/4 cols según breakpoint)
+- [x] IncomeOutcomeChart con 2 series y tooltip personalizado
+- [x] ProfitPercentChart con 1 serie y línea de referencia
+- [x] Componentes base (Card, CardHeader, CardTitle, CardDescription, Skeleton)
+- [x] CSS variables definidas en index.css
 
-### Pendiente para Fase 2
-- [ ] Validar props en componentes (usar Zod o TypeScript strict)
-- [ ] Agregar stories en Storybook (opcional)
-- [ ] Documentar ejemplos de uso en componentes nuevos
-- [ ] Agregar error state a todos los componentes
-- [ ] Mejorar accessibilidad (ARIA, keyboard nav)
+### Fase 2 (Pendiente) ⏳
+**NO COMENZAR HASTA FASE 2 (semanas 9-16)**
+- [ ] Crear AlertsTable (new component, usa AlertsParams + AlertsResponse)
+- [ ] Crear CategoriesChart (new component, pie/donut)
+- [ ] Crear ComparisonChart (new component, grouped bars)
+- [ ] Crear FilterBar (new component, date picker + selects)
+- [ ] Crear PaginationControl (new component, prev/next)
+- [ ] Mejorar DashboardHeader con selector de período interactivo
+- [ ] Mejorar KPICard con prop `comparison` y prop `error`
+- [ ] Mejorar KPIRow con badges de filtros y eventos onClick
+- [ ] Mejorar Charts con prop `businessType` y `groupBy` dinámico
+
+### Validación de Tipos
+- [ ] Ejecutar `npm run type-check` sin errores
+- [ ] Importaciones de [financial-types.ts](../src/lib/financial-types.ts) correctas
+- [ ] Importaciones de [api-types.ts](./api-types.ts) y [param-types.ts](./param-types.ts) correctas (Fase 2+)
