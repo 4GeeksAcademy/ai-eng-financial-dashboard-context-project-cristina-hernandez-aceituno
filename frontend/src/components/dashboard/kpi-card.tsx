@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -31,7 +32,7 @@ const variantStyles: Record<KPICardProps['variant'], { badge: string; icon: stri
   },
 }
 
-export function KPICard({ label, value, helperText, icon: Icon, variant, loading }: KPICardProps) {
+export const KPICard = memo(function KPICard({ label, value, helperText, icon: Icon, variant, loading }: KPICardProps) {
   const styles = variantStyles[variant]
 
   if (loading) {
@@ -65,4 +66,13 @@ export function KPICard({ label, value, helperText, icon: Icon, variant, loading
       </CardContent>
     </Card>
   )
-}
+}, (prevProps, nextProps) => {
+  // Vercel pattern: rerender-memo with custom comparison
+  // Returns true if props are EQUAL (skip re-render), false if DIFFERENT (re-render)
+  return prevProps.label === nextProps.label &&
+         prevProps.value === nextProps.value &&
+         prevProps.helperText === nextProps.helperText &&
+         prevProps.icon === nextProps.icon &&
+         prevProps.variant === nextProps.variant &&
+         prevProps.loading === nextProps.loading
+})

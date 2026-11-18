@@ -18,14 +18,23 @@ function formatMonthYearLabel(yearMonthKey: string): string {
   });
 }
 
-export function computeKPIs(movements: FinancialMovement[]): KPIMetrics {
-  const totalIncome = movements
-    .filter((m) => m.operation_type === "income")
-    .reduce((sum, m) => sum + m.amount, 0);
+// Cache Intl.NumberFormat at module level (Vercel pattern: js-cache-function-results)
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
-  const totalOutcome = movements
-    .filter((m) => m.operation_type === "outcome")
-    .reduce((sum, m) => sum + m.amount, 0);
+export function computeKPIs(movements: FinancialMovement[]): KPIMetrics {
+  // Single-pass iteration (Vercel pattern: js-combine-iterations)
+  const { totalIncome, totalOutcome } = movements.reduce(
+    (acc, m) => ({
+      totalIncome: acc.totalIncome + (m.operation_type === "income" ? m.amount : 0),
+      totalOutcome: acc.totalOutcome + (m.operation_type === "outcome" ? m.amount : 0),
+    }),
+    { totalIncome: 0, totalOutcome: 0 }
+  );
 
   const profit = totalIncome - totalOutcome;
   const profitPercent = totalIncome > 0 ? (profit / totalIncome) * 100 : 0;
@@ -67,12 +76,7 @@ export function computeMonthlyData(
 }
 
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+  return currencyFormatter.format(value);
 }
 
 export function formatPercent(value: number): string {
