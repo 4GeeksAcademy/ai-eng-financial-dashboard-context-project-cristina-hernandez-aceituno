@@ -8,6 +8,8 @@ from typing import Literal
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from app.financial_validation import round_currency, round_percent, round_ratio
+
 OperationType = Literal["income", "outcome"]
 Category = Literal["suppliers", "sales",
                    "operational", "administrative", "others"]
@@ -77,10 +79,10 @@ def _build_movement(month: int, income_probability: float, today: date) -> Finan
 
     if operation_type == "income":
         category: Category = "sales" if random.random() < 0.9 else "others"
-        amount = round(random.uniform(800, 12000), 2)
+        amount = round_currency(random.uniform(800, 12000))
     else:
         category = random.choice(OUTCOME_CATEGORIES)
-        amount = round(random.uniform(500, 9000), 2)
+        amount = round_currency(random.uniform(500, 9000))
 
     return FinancialMovement(
         create_date=movement_date,
@@ -179,9 +181,9 @@ def summarize_movements(
     return [
         MetricsSummaryItem(
             period=period,
-            income=round(values["income"], 2),
-            outcome=round(values["outcome"], 2),
-            net=round(values["income"] - values["outcome"], 2),
+            income=round_currency(values["income"]),
+            outcome=round_currency(values["outcome"]),
+            net=round_currency(values["income"] - values["outcome"]),
         )
         for period, values in sorted(summary_map.items(), key=lambda item: item[0])
     ]
@@ -202,7 +204,7 @@ def build_top_categories(
         TopCategoryItem(
             category=category,
             operation_type=operation_type,
-            total_amount=round(total_amount, 2),
+            total_amount=round_currency(total_amount),
         )
         for category, total_amount in ordered[:limit]
     ]
@@ -213,7 +215,7 @@ def calculate_net_value(movements: list[FinancialMovement]) -> float:
         item.amount for item in movements if item.operation_type == "income")
     outcome = sum(
         item.amount for item in movements if item.operation_type == "outcome")
-    return round(income - outcome, 2)
+    return round_currency(income - outcome)
 
 
 def detect_outcome_alerts(
@@ -231,9 +233,9 @@ def detect_outcome_alerts(
                     alerts.append(
                         MetricsAlert(
                             period=item.period,
-                            outcome_total=round(item.outcome, 2),
-                            baseline_average=round(baseline, 2),
-                            increase_ratio=round(increase_ratio, 4),
+                            outcome_total=round_currency(item.outcome),
+                            baseline_average=round_currency(baseline),
+                            increase_ratio=round_ratio(increase_ratio),
                         )
                     )
         historical_outcomes.append(item.outcome)
@@ -326,10 +328,10 @@ def get_metrics_comparison(
     )
     previous_net = calculate_net_value(previous_movements)
 
-    delta_abs = round(current_net - previous_net, 2)
+    delta_abs = round_currency(current_net - previous_net)
     delta_pct = None
     if previous_net != 0:
-        delta_pct = round((delta_abs / abs(previous_net)) * 100, 2)
+        delta_pct = round_percent((delta_abs / abs(previous_net)) * 100)
 
     return MetricsComparison(
         current_period=current_net,

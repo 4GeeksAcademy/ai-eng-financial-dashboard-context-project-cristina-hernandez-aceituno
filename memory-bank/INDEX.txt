@@ -6,9 +6,10 @@
 LOCATION: /memory-bank/
 
 CREATED: 2026-11-13
-TOTAL FILES: 6 documents
-TOTAL SIZE: 76 KB
-TOTAL LINES: ~1,900
+UPDATED: 2026-11-18
+TOTAL FILES: 7 documents
+TOTAL SIZE: 95 KB
+TOTAL LINES: ~2,400
 READING TIME: 5-90 minutes depending on depth
 
 ================================================================================

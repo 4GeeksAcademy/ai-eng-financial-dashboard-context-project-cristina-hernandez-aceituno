@@ -1,7 +1,9 @@
 # 📋 Current Project Status
 
-**Última actualización**: 2026-11-13  
-**Estado General**: MVP funcional con limitaciones críticas de seguridad
+**Última actualización**: 2026-11-18  
+**Estado General**: MVP con optimizaciones frontend (Accessibility + Performance)  
+**Skills Aplicadas**: 🎓 accessibility, 🎓 vercel-react-best-practices  
+**PR Activo**: [#1 - Frontend optimization with WCAG 2.2 accessibility and Vercel React best practices](https://github.com/4GeeksAcademy/ai-eng-financial-dashboard-context-project-cristina-hernandez-aceituno/pull/1)
 
 ---
 

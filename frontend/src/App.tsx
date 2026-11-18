@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { KPIRow } from "@/components/dashboard/kpi-row";
-import { IncomeOutcomeChart } from "@/components/dashboard/income-outcome-chart";
-import { ProfitPercentChart } from "@/components/dashboard/profit-percent-chart";
+import { IncomeOutcomeChartLazy } from "@/components/dashboard/lazy-income-outcome-chart";
+import { ProfitPercentChartLazy } from "@/components/dashboard/lazy-profit-percent-chart";
 import {
   type FinancialMovement,
   type KPIMetrics,
@@ -49,7 +49,11 @@ function App() {
           <DashboardHeader period="2024 - Full Year" />
 
           {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+            >
               {error}
             </div>
           ) : null}
@@ -62,8 +66,8 @@ function App() {
             aria-label="Financial charts"
             className="grid grid-cols-1 gap-4 xl:grid-cols-2"
           >
-            <IncomeOutcomeChart data={monthlyData} loading={loading} />
-            <ProfitPercentChart data={monthlyData} loading={loading} />
+            <IncomeOutcomeChartLazy data={monthlyData} loading={loading} />
+            <ProfitPercentChartLazy data={monthlyData} loading={loading} />
           </section>
         </div>
       </div>

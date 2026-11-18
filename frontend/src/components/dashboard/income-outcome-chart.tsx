@@ -75,8 +75,9 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
             No data available to display
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <div role="img" aria-label="Line chart showing monthly income versus outcome evolution throughout the year">
+            <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} aria-hidden="true">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
               <XAxis
                 dataKey="month"
@@ -116,7 +117,8 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
                 activeDot={{ r: 5, strokeWidth: 0 }}
               />
             </LineChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          </div>
         )}
       </CardContent>
     </Card>
